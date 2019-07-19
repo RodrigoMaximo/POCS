@@ -1,11 +1,13 @@
 import UIKit
+import LocalAuthentication
 
 class ViewController: UIViewController {
 
     var actions: [Action] = [
         Action(id: "action1", name: "Change Color", color: .blue),
         Action(id: "action2", name: "Change Size", color: .green),
-        Action(id: "action3", name: "Change Size & Color", color: .red)
+        Action(id: "action3", name: "Change Size & Color", color: .red),
+        Action(id: "action4", name: "Face Id", color: .yellow)
     ]
 
     @IBOutlet weak var collectionView: UICollectionView! {
@@ -94,7 +96,33 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard indexPath.row < actions.count - 1 else {
+            faceId()
+            return
+        }
         performAction(ofRow: indexPath.row)
+    }
+
+    private func faceId() {
+        let myContext = LAContext()
+        var authError: NSError?
+        guard #available(iOS 8.0, macOS 10.12.1, *) else {
+            print("Ooops!!.. This feature is not supported.")
+            return
+        }
+        guard myContext.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &authError) else {
+            print("Sorry!!.. Could not evaluate policy.")
+            return
+        }
+        myContext.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Insert touch Id.") { success, evaluateError in
+            DispatchQueue.main.async {
+                if success {
+                    print("Awesome!!... User authenticated successfully")
+                } else {
+                    print("Sorry!!... User did not authenticate successfully")
+                }
+            }
+        }
     }
 }
 
